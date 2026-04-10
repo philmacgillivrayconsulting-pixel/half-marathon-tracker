@@ -10,15 +10,32 @@ interface AdminModalProps {
 export default function AdminModal({ onSuccess, onClose }: AdminModalProps) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
+  const [checking, setChecking] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pin === process.env.NEXT_PUBLIC_ADMIN_PIN) {
-      onSuccess();
-    } else {
+    if (!pin.trim()) return;
+    setChecking(true);
+
+    try {
+      const res = await fetch('/api/admin-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pin.trim() }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        onSuccess();
+      } else {
+        setError(true);
+        setPin('');
+      }
+    } catch {
       setError(true);
       setPin('');
     }
+    setChecking(false);
   };
 
   return (
@@ -72,14 +89,15 @@ export default function AdminModal({ onSuccess, onClose }: AdminModalProps) {
           )}
           <button
             type="submit"
+            disabled={checking}
             style={{
               width: '100%', padding: '10px 0', borderRadius: 8,
               background: '#1f6feb', color: '#fff', border: 'none',
               fontSize: 14, fontWeight: 500, fontFamily: 'var(--font-body)',
-              cursor: 'pointer',
+              cursor: 'pointer', opacity: checking ? 0.6 : 1,
             }}
           >
-            Unlock
+            {checking ? 'Checking...' : 'Unlock'}
           </button>
         </form>
       </div>
