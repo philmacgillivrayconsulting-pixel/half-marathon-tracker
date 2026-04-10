@@ -7,6 +7,7 @@ import RaceRow from '@/components/RaceRow';
 import NameModal from '@/components/NameModal';
 import AdminModal from '@/components/AdminModal';
 import AddRaceForm from '@/components/AddRaceForm';
+import AddRaceUrlForm from '@/components/AddRaceUrlForm';
 
 type Tab = 'all' | 'wishlist' | 'signup' | 'past';
 type SortMode = 'date-asc' | 'date-desc' | 'pb-desc' | 'name-asc';
@@ -25,6 +26,7 @@ export default function Home() {
   const [showRaceForm, setShowRaceForm] = useState(false);
   const [editingRace, setEditingRace] = useState<Race | null>(null);
   const [pendingAction, setPendingAction] = useState<{ type: 'wl' | 'su'; raceId: number } | null>(null);
+  const [showAddUrl, setShowAddUrl] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   // Load user name from localStorage
@@ -343,6 +345,23 @@ export default function Home() {
       </header>
 
       <main style={{ maxWidth: 900, margin: '0 auto', padding: '16px 16px 40px' }}>
+        {/* Add a Race button */}
+        <button
+          onClick={() => setShowAddUrl(true)}
+          style={{
+            width: '100%', padding: '14px 0', borderRadius: 10,
+            background: '#2ea043', color: '#fff', border: 'none',
+            fontSize: 18, fontWeight: 500, fontFamily: 'var(--font-heading)',
+            letterSpacing: 1, cursor: 'pointer',
+            marginBottom: 16,
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#3fb950'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = '#2ea043'; }}
+        >
+          + Add a Race
+        </button>
+
         {/* Tabs */}
         <div style={{
           display: 'flex', gap: 4, marginBottom: 12,
@@ -485,6 +504,12 @@ export default function Home() {
           race={editingRace}
           onClose={() => { setShowRaceForm(false); setEditingRace(null); }}
           onSaved={handleRaceSaved}
+        />
+      )}
+      {showAddUrl && (
+        <AddRaceUrlForm
+          onClose={() => setShowAddUrl(false)}
+          onSaved={() => { setShowAddUrl(false); fetchData(); }}
         />
       )}
     </div>
