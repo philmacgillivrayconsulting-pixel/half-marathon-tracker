@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   const { pin } = await req.json();
   const adminPin = process.env.ADMIN_PIN || process.env.NEXT_PUBLIC_ADMIN_PIN || '';
@@ -13,4 +15,12 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ ok: false }, { status: 401 });
+}
+
+export async function GET() {
+  const has1 = !!process.env.ADMIN_PIN;
+  const has2 = !!process.env.NEXT_PUBLIC_ADMIN_PIN;
+  const len1 = (process.env.ADMIN_PIN || '').length;
+  const len2 = (process.env.NEXT_PUBLIC_ADMIN_PIN || '').length;
+  return NextResponse.json({ has_ADMIN_PIN: has1, has_NEXT_PUBLIC: has2, len1, len2 });
 }
