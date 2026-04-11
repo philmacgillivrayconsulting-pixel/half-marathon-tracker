@@ -28,6 +28,13 @@ export interface Signup {
   created_at: string;
 }
 
+export interface CantDo {
+  id: number;
+  race_id: number;
+  user_name: string;
+  created_at: string;
+}
+
 export const MONTH_NUM: Record<string, number> = {
   Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6,
   Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12,

@@ -11,22 +11,25 @@ interface RaceRowProps {
   race: Race;
   wishlistNames: string[];
   signupNames: string[];
+  cantdoNames: string[];
   currentUser: string;
   isAdmin: boolean;
   onToggleWishlist: (raceId: number) => void;
   onToggleSignup: (raceId: number) => void;
+  onToggleCantdo: (raceId: number) => void;
   onEdit: (race: Race) => void;
   onDelete: (race: Race) => void;
 }
 
 export default function RaceRow({
-  race, wishlistNames, signupNames, currentUser,
-  isAdmin, onToggleWishlist, onToggleSignup, onEdit, onDelete,
+  race, wishlistNames, signupNames, cantdoNames, currentUser,
+  isAdmin, onToggleWishlist, onToggleSignup, onToggleCantdo, onEdit, onDelete,
 }: RaceRowProps) {
   const [expanded, setExpanded] = useState(false);
   const past = isPast(race);
   const userInWL = wishlistNames.includes(currentUser);
   const userInSU = signupNames.includes(currentUser);
+  const userInCD = cantdoNames.includes(currentUser);
 
   const allPills = [
     ...wishlistNames.map(n => ({ name: n, type: 'wishlist' as const })),
@@ -115,6 +118,7 @@ export default function RaceRow({
         {/* Action buttons */}
         <ActionBtn type="wishlist" active={userInWL} onClick={e => { e.stopPropagation(); onToggleWishlist(race.id); }} />
         <ActionBtn type="signup" active={userInSU} onClick={e => { e.stopPropagation(); onToggleSignup(race.id); }} />
+        <ActionBtn type="cantdo" active={userInCD} onClick={e => { e.stopPropagation(); onToggleCantdo(race.id); }} />
 
         {/* Chevron */}
         <span style={{
@@ -186,7 +190,7 @@ export default function RaceRow({
             )}
 
             {/* Who's interested */}
-            {(wishlistNames.length > 0 || signupNames.length > 0) && (
+            {(wishlistNames.length > 0 || signupNames.length > 0 || cantdoNames.length > 0) && (
               <div style={{
                 marginTop: 6, padding: '10px 12px',
                 background: '#0d1117', borderRadius: 8,
@@ -209,6 +213,16 @@ export default function RaceRow({
                     </span>
                     {signupNames.map(n => (
                       <NamePill key={n} name={n} type="signup" isCurrentUser={n === currentUser} />
+                    ))}
+                  </div>
+                )}
+                {cantdoNames.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 11, color: '#6e7681', fontFamily: 'var(--font-body)', marginRight: 2 }}>
+                      &#x274C; Can&apos;t do
+                    </span>
+                    {cantdoNames.map(n => (
+                      <NamePill key={n} name={n} type="cantdo" isCurrentUser={n === currentUser} />
                     ))}
                   </div>
                 )}

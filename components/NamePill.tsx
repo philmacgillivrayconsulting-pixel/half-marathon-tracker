@@ -2,7 +2,7 @@
 
 interface NamePillProps {
   name: string;
-  type: 'wishlist' | 'signup';
+  type: 'wishlist' | 'signup' | 'cantdo';
   isCurrentUser: boolean;
 }
 
@@ -21,9 +21,12 @@ export default function NamePill({ name, type, isCurrentUser }: NamePillProps) {
   if (type === 'wishlist') {
     styles.color = isCurrentUser ? '#1a1a0a' : '#d4c48a';
     styles.background = isCurrentUser ? '#f2c94c' : '#2a2414';
-  } else {
+  } else if (type === 'signup') {
     styles.color = isCurrentUser ? '#0d1a0d' : '#8ad4a0';
     styles.background = isCurrentUser ? '#6fcf97' : '#1a2e1e';
+  } else {
+    styles.color = isCurrentUser ? '#fff' : '#d48a8a';
+    styles.background = isCurrentUser ? '#eb5757' : '#2e1a1a';
   }
 
   return <span style={styles}>{name}</span>;

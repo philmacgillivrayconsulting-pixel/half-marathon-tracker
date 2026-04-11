@@ -2,20 +2,21 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase, supabaseConfigured } from '@/lib/supabase';
-import { Race, Wishlist, Signup, isPast, raceSortDate } from '@/lib/types';
+import { Race, Wishlist, Signup, CantDo, isPast, raceSortDate } from '@/lib/types';
 import RaceRow from '@/components/RaceRow';
 import NameModal from '@/components/NameModal';
 import AdminModal from '@/components/AdminModal';
 import AddRaceForm from '@/components/AddRaceForm';
 import AddRaceUrlForm from '@/components/AddRaceUrlForm';
 
-type Tab = 'all' | 'wishlist' | 'signup' | 'past';
+type Tab = 'all' | 'wishlist' | 'signup' | 'cantdo' | 'past';
 type SortMode = 'date-asc' | 'date-desc' | 'pb-desc' | 'name-asc';
 
 export default function Home() {
   const [races, setRaces] = useState<Race[]>([]);
   const [wishlists, setWishlists] = useState<Wishlist[]>([]);
   const [signups, setSignups] = useState<Signup[]>([]);
+  const [cantdos, setCantdos] = useState<CantDo[]>([]);
   const [tab, setTab] = useState<Tab>('all');
   const [sort, setSort] = useState<SortMode>('date-asc');
   const [filterPerson, setFilterPerson] = useState<string>('everyone');
@@ -25,7 +26,7 @@ export default function Home() {
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [showRaceForm, setShowRaceForm] = useState(false);
   const [editingRace, setEditingRace] = useState<Race | null>(null);
-  const [pendingAction, setPendingAction] = useState<{ type: 'wl' | 'su'; raceId: number } | null>(null);
+  const [pendingAction, setPendingAction] = useState<{ type: 'wl' | 'su' | 'cd'; raceId: number } | null>(null);
   const [showAddUrl, setShowAddUrl] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -38,14 +39,16 @@ export default function Home() {
   // Fetch all data
   const fetchData = useCallback(async () => {
     if (!supabaseConfigured) { setLoaded(true); return; }
-    const [rRes, wRes, sRes] = await Promise.all([
+    const [rRes, wRes, sRes, cRes] = await Promise.all([
       supabase.from('races').select('*'),
       supabase.from('wishlists').select('*'),
       supabase.from('signups').select('*'),
+      supabase.from('cantdo').select('*'),
     ]);
     if (rRes.data) setRaces(rRes.data);
     if (wRes.data) setWishlists(wRes.data);
     if (sRes.data) setSignups(sRes.data);
+    if (cRes.data) setCantdos(cRes.data);
     setLoaded(true);
   }, []);
 
@@ -60,6 +63,9 @@ export default function Home() {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'signups' }, () => {
         supabase.from('signups').select('*').then(r => { if (r.data) setSignups(r.data); });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cantdo' }, () => {
+        supabase.from('cantdo').select('*').then(r => { if (r.data) setCantdos(r.data); });
       })
       .subscribe();
 
@@ -85,6 +91,15 @@ export default function Home() {
     return m;
   }, [signups]);
 
+  const cdMap = useMemo(() => {
+    const m: Record<number, string[]> = {};
+    for (const c of cantdos) {
+      if (!m[c.race_id]) m[c.race_id] = [];
+      m[c.race_id].push(c.user_name);
+    }
+    return m;
+  }, [cantdos]);
+
   const saveName = (name: string) => {
     setUserName(name);
     localStorage.setItem('hm_user_name', name);
@@ -94,7 +109,8 @@ export default function Home() {
       const { type, raceId } = pendingAction;
       setPendingAction(null);
       if (type === 'wl') doToggleWishlist(raceId, name);
-      else doToggleSignup(raceId, name);
+      else if (type === 'su') doToggleSignup(raceId, name);
+      else doToggleCantdo(raceId, name);
     }
   };
 
@@ -138,6 +154,26 @@ export default function Home() {
     doToggleSignup(raceId, userName);
   };
 
+  const doToggleCantdo = async (raceId: number, name: string) => {
+    const existing = cantdos.find(c => c.race_id === raceId && c.user_name === name);
+    if (existing) {
+      await supabase.from('cantdo').delete().eq('id', existing.id);
+      setCantdos(cs => cs.filter(c => c.id !== existing.id));
+    } else {
+      const { data } = await supabase.from('cantdo').insert({ race_id: raceId, user_name: name }).select().single();
+      if (data) setCantdos(cs => [...cs, data]);
+    }
+  };
+
+  const handleToggleCantdo = (raceId: number) => {
+    if (!userName) {
+      setPendingAction({ type: 'cd', raceId });
+      setShowNameModal(true);
+      return;
+    }
+    doToggleCantdo(raceId, userName);
+  };
+
   const handleDeleteRace = async (race: Race) => {
     if (!confirm(`Delete "${race.name}"?`)) return;
     await supabase.from('races').delete().eq('id', race.id);
@@ -169,13 +205,17 @@ export default function Home() {
       list = list.filter(r => !isPast(r) && (wlMap[r.id]?.length || 0) > 0);
     } else if (tab === 'signup') {
       list = list.filter(r => !isPast(r) && (suMap[r.id]?.length || 0) > 0);
+    } else if (tab === 'cantdo') {
+      list = list.filter(r => !isPast(r) && (cdMap[r.id]?.length || 0) > 0);
     }
 
-    if ((tab === 'wishlist' || tab === 'signup') && filterPerson !== 'everyone') {
+    if ((tab === 'wishlist' || tab === 'signup' || tab === 'cantdo') && filterPerson !== 'everyone') {
       if (tab === 'wishlist') {
         list = list.filter(r => wlMap[r.id]?.includes(filterPerson));
-      } else {
+      } else if (tab === 'signup') {
         list = list.filter(r => suMap[r.id]?.includes(filterPerson));
+      } else {
+        list = list.filter(r => cdMap[r.id]?.includes(filterPerson));
       }
     }
 
@@ -196,14 +236,15 @@ export default function Home() {
     }
 
     return list;
-  }, [races, tab, sort, filterPerson, wlMap, suMap]);
+  }, [races, tab, sort, filterPerson, wlMap, suMap, cdMap]);
 
   const counts = useMemo(() => ({
     all: upcomingRaces.length,
     wishlist: upcomingRaces.filter(r => (wlMap[r.id]?.length || 0) > 0).length,
     signup: upcomingRaces.filter(r => (suMap[r.id]?.length || 0) > 0).length,
+    cantdo: upcomingRaces.filter(r => (cdMap[r.id]?.length || 0) > 0).length,
     past: races.filter(r => isPast(r)).length,
-  }), [upcomingRaces, races, wlMap, suMap]);
+  }), [upcomingRaces, races, wlMap, suMap, cdMap]);
 
   const filterNames = useMemo(() => {
     const nameSet = new Set<string>();
@@ -211,9 +252,11 @@ export default function Home() {
       upcomingRaces.forEach(r => wlMap[r.id]?.forEach(n => nameSet.add(n)));
     } else if (tab === 'signup') {
       upcomingRaces.forEach(r => suMap[r.id]?.forEach(n => nameSet.add(n)));
+    } else if (tab === 'cantdo') {
+      upcomingRaces.forEach(r => cdMap[r.id]?.forEach(n => nameSet.add(n)));
     }
     return Array.from(nameSet).sort();
-  }, [tab, upcomingRaces, wlMap, suMap]);
+  }, [tab, upcomingRaces, wlMap, suMap, cdMap]);
 
   useEffect(() => { setFilterPerson('everyone'); }, [tab]);
 
@@ -221,6 +264,7 @@ export default function Home() {
     { key: 'all', emoji: '\uD83C\uDFC3', label: 'All Races' },
     { key: 'wishlist', emoji: '\u2B50', label: 'Wish List' },
     { key: 'signup', emoji: '\u2705', label: 'Signed Up' },
+    { key: 'cantdo', emoji: '\u274C', label: "Can't Do" },
     { key: 'past', emoji: '\uD83C\uDFC5', label: 'Past' },
   ];
 
@@ -406,7 +450,7 @@ export default function Home() {
           display: 'flex', alignItems: 'center', gap: 8,
           marginBottom: 12, flexWrap: 'wrap',
         }}>
-          {(tab === 'wishlist' || tab === 'signup') && filterNames.length > 0 && (
+          {(tab === 'wishlist' || tab === 'signup' || tab === 'cantdo') && filterNames.length > 0 && (
             <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap' }}>
               <button
                 onClick={() => setFilterPerson('everyone')}
@@ -438,7 +482,7 @@ export default function Home() {
             </div>
           )}
 
-          {(tab !== 'wishlist' && tab !== 'signup' || filterNames.length === 0) && <div style={{ flex: 1 }} />}
+          {(tab !== 'wishlist' && tab !== 'signup' && tab !== 'cantdo' || filterNames.length === 0) && <div style={{ flex: 1 }} />}
 
           <select
             value={sort}
@@ -467,6 +511,7 @@ export default function Home() {
               {tab === 'past' ? 'No past races yet.' :
                tab === 'wishlist' ? 'No races wishlisted yet.' :
                tab === 'signup' ? 'No signups yet.' :
+               tab === 'cantdo' ? "No races marked as can't do." :
                'No upcoming races.'}
             </div>
           )}
@@ -476,10 +521,12 @@ export default function Home() {
               race={race}
               wishlistNames={wlMap[race.id] || []}
               signupNames={suMap[race.id] || []}
+              cantdoNames={cdMap[race.id] || []}
               currentUser={userName}
               isAdmin={isAdmin}
               onToggleWishlist={handleToggleWishlist}
               onToggleSignup={handleToggleSignup}
+              onToggleCantdo={handleToggleCantdo}
               onEdit={handleEditRace}
               onDelete={handleDeleteRace}
             />
