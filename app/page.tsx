@@ -8,6 +8,7 @@ import NameModal from '@/components/NameModal';
 import AdminModal from '@/components/AdminModal';
 import AddRaceForm from '@/components/AddRaceForm';
 import AddRaceUrlForm from '@/components/AddRaceUrlForm';
+import Link from 'next/link';
 
 type Tab = 'all' | 'wishlist' | 'signup' | 'cantdo' | 'past';
 type SortMode = 'date-asc' | 'date-desc' | 'pb-desc' | 'name-asc';
@@ -324,6 +325,17 @@ export default function Home() {
         </h1>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Link
+            href="/training"
+            style={{
+              background: 'none', border: '1px solid #21262d',
+              borderRadius: 8, padding: '6px 10px',
+              color: '#8b949e', fontSize: 13, fontFamily: 'var(--font-body)',
+              textDecoration: 'none',
+            }}
+          >
+            Training →
+          </Link>
           {userName ? (
             <button
               onClick={() => {
