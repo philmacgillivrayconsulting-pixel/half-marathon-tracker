@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "remotion": "remotion studio",
+    "remotion:render": "remotion render SolveIntelligenceFeatures out/solve-intelligence.mp4"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
@@ -14,10 +16,14 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@remotion/bundler": "^4.0.454",
+    "@remotion/cli": "^4.0.454",
+    "@remotion/renderer": "^4.0.454",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "remotion": "^4.0.454",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
