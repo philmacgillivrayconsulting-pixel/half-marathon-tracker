@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solve Intelligence — Features Video Storyboard</title>
+<style>
+  :root {
+    --panel: rgba(30, 41, 80, 0.85);
+    --border: rgba(123, 167, 255, 0.25);
+    --text: #F8FAFC;
+    --muted: #94A3B8;
+    --accent: #7BA7FF;
+    --cyan: #22D3EE;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(circle at 20% 20%, #1A2247 0%, #111733 35%, #0A0E27 75%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+    min-height: 100vh;
+    padding: 32px 16px 64px;
+  }
+  header { max-width: 1100px; margin: 0 auto 32px; text-align: center; }
+  header .eyebrow { color: var(--cyan); font-size: 13px; letter-spacing: 4px; font-weight: 600; text-transform: uppercase; }
+  header h1 { margin: 8px 0 4px; font-size: clamp(28px, 5vw, 48px); font-weight: 800; letter-spacing: -1px; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--muted); margin: 0; font-size: 16px; }
+  .grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; cursor: zoom-in; transition: transform 0.18s ease, border-color 0.18s ease; }
+  .card:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .card img { display: block; width: 100%; height: auto; }
+  .card .meta { padding: 14px 16px 16px; }
+  .card .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .card h3 { margin: 0; font-size: 16px; font-weight: 700; }
+  .card .time { color: var(--cyan); font-size: 12px; font-weight: 600; letter-spacing: 1.5px; flex-shrink: 0; }
+  .card p { margin: 6px 0 0; color: var(--muted); font-size: 13.5px; line-height: 1.45; }
+  .lightbox { position: fixed; inset: 0; background: rgba(5, 8, 22, 0.95); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 100; cursor: zoom-out; }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 80vh; border-radius: 12px; border: 1px solid var(--border); }
+  .lb-meta { position: absolute; bottom: 24px; left: 24px; right: 24px; text-align: center; color: var(--text); }
+  .lb-meta h3 { margin: 0; font-size: 18px; }
+  .lb-meta p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+  .nav { position: absolute; top: 50%; transform: translateY(-50%); background: var(--panel); border: 1px solid var(--border); color: var(--text); width: 44px; height: 44px; border-radius: 999px; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .nav.prev { left: 16px; }
+  .nav.next { right: 16px; }
+  .close { position: absolute; top: 16px; right: 16px; background: var(--panel); border: 1px solid var(--border); color: var(--text); width: 40px; height: 40px; border-radius: 999px; font-size: 20px; cursor: pointer; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">Remotion Storyboard</div>
+    <h1>Solve <span>Intelligence</span> — Features Video</h1>
+    <p>32 seconds &middot; 1920&times;1080 &middot; 8 scenes &middot; tap any frame to enlarge</p>
+  </header>
+  <main class="grid" id="grid"></main>
+  <div class="lightbox" id="lb">
+    <button class="close" aria-label="Close">&times;</button>
+    <button class="nav prev" aria-label="Previous">&lsaquo;</button>
+    <img id="lbImg" alt="">
+    <button class="nav next" aria-label="Next">&rsaquo;</button>
+    <div class="lb-meta">
+      <h3 id="lbTitle"></h3>
+      <p id="lbDesc"></p>
+    </div>
+  </div>
+  <script>
+    const scenes = [
+      {file: 'frames/01-intro.png',       title: '01 - Intro',                       time: '0-3s',   desc: 'Logo, name, tagline "The AI Copilot for IP Law".'},
+      {file: 'frames/02-problem.png',     title: '02 - The Problem',                 time: '3-6s',   desc: '"Patent work used to mean endless hours" - pills strike through one by one.'},
+      {file: 'frames/03-drafting.png',    title: '03 - Patent Drafting Copilot',     time: '6-11s',  desc: 'Live-typing claim spec in a mock editor; AI side panel shows multi-jurisdictional, auto-figures, prior-art coverage.'},
+      {file: 'frames/04-prosecution.png', title: '04 - Prosecution',                 time: '11-16s', desc: 'Sec. 102 / 103 / 112(b) rejections appear with FLAGGED badges and detected flaws.'},
+      {file: 'frames/05-charts.png',      title: '05 - Charts',                      time: '16-21s', desc: 'Claim elements auto-mapped to Smith / Chen / Liu evidence. Tags for FTO, infringement, SEP, litigation.'},
+      {file: 'frames/06-trust.png',       title: '06 - Trust & Privacy',             time: '21-25s', desc: 'Animated shield checkmark. Sandboxed, never trained on, never monitored.'},
+      {file: 'frames/07-stats.png',       title: '07 - Stats',                       time: '25-29s', desc: '400+ IP teams. 6 continents. 50%+ more productive. <1h vs 20h drafting work.'},
+      {file: 'frames/08-cta.png',         title: '08 - CTA',                         time: '29-32s', desc: 'Closing logo, "Draft. Prosecute. Chart. Litigate. All in one place.", glowing button, solveintelligence.com.'},
+    ];
+    const grid = document.getElementById('grid');
+    const lb = document.getElementById('lb');
+    const lbImg = document.getElementById('lbImg');
+    const lbTitle = document.getElementById('lbTitle');
+    const lbDesc = document.getElementById('lbDesc');
+    let idx = 0;
+    scenes.forEach((s, i) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      const img = document.createElement('img');
+      img.src = s.file; img.alt = s.title; img.loading = 'lazy';
+      const meta = document.createElement('div'); meta.className = 'meta';
+      const row = document.createElement('div'); row.className = 'row';
+      const h3 = document.createElement('h3'); h3.textContent = s.title;
+      const time = document.createElement('span'); time.className = 'time'; time.textContent = s.time;
+      row.append(h3, time);
+      const p = document.createElement('p'); p.textContent = s.desc;
+      meta.append(row, p);
+      card.append(img, meta);
+      card.addEventListener('click', () => openLb(i));
+      grid.appendChild(card);
+    });
+    function openLb(i) {
+      idx = i;
+      const s = scenes[i];
+      lbImg.src = s.file;
+      lbTitle.textContent = s.title + ' - ' + s.time;
+      lbDesc.textContent = s.desc;
+      lb.classList.add('open');
+    }
+    function closeLb() { lb.classList.remove('open'); }
+    function step(dir) { idx = (idx + dir + scenes.length) % scenes.length; openLb(idx); }
+    lb.addEventListener('click', (e) => { if (e.target === lb) closeLb(); });
+    document.querySelector('.close').addEventListener('click', (e) => { e.stopPropagation(); closeLb(); });
+    document.querySelector('.nav.prev').addEventListener('click', (e) => { e.stopPropagation(); step(-1); });
+    document.querySelector('.nav.next').addEventListener('click', (e) => { e.stopPropagation(); step(1); });
+    document.addEventListener('keydown', (e) => {
+      if (!lb.classList.contains('open')) return;
+      if (e.key === 'Escape') closeLb();
+      if (e.key === 'ArrowRight') step(1);
+      if (e.key === 'ArrowLeft') step(-1);
+    });
+  </script>
+</body>
+</html>
